@@ -4,7 +4,7 @@ import {
   Bell, Menu, Settings, ShieldAlert, LogOut, ChevronDown,
   KeyRound, CheckCircle2, Mail, Search, X, User,
   GraduationCap, Users, ClipboardList, DollarSign,
-  BookOpen, AlertCircle
+  BookOpen, AlertCircle, ArrowRight
 } from 'lucide-react';
 import authService from '../services/authService';
 import Modal from './Modal';
@@ -26,48 +26,78 @@ const BrandMark = () => (
 /* ─── Global Search ───────────────────────────── */
 const GlobalSearch = () => {
   const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [query, setQuery] = useState('');
   const inputRef = useRef(null);
-  const isMac = navigator.platform.toUpperCase().includes('MAC') || navigator.userAgent.includes('Mac');
+  const panelRef = useRef(null);
+  const stateRef = useRef({ open: false, closing: false });
+  const timerRef = useRef(null);
+  const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
 
-  // Open with Ctrl+K / ⌘K
+  stateRef.current = { open, closing };
+
+  const close = () => {
+    if (stateRef.current.closing) return;
+    clearTimeout(timerRef.current);
+    setClosing(true);
+    timerRef.current = setTimeout(() => {
+      setOpen(false);
+      setClosing(false);
+      setQuery('');
+    }, 150);
+  };
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+
   useEffect(() => {
     const handler = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        setOpen(true);
+        if (stateRef.current.open) close();
+        else setOpen(true);
       }
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape' && stateRef.current.open) close();
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
   useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 50);
-  }, [open]);
+    if (open && !closing) {
+      const id = requestAnimationFrame(() => inputRef.current?.focus());
+      return () => cancelAnimationFrame(id);
+    }
+  }, [open, closing]);
+
+  const handleOutsideMouseDown = (e) => {
+    if (!stateRef.current.closing && panelRef.current && !panelRef.current.contains(e.target)) {
+      close();
+    }
+  };
 
   const quickLinks = [
-    { label: 'Students', href: '/students', icon: Users },
-    { label: 'Inquiries', href: '/inquiries', icon: ClipboardList },
+    { label: 'Students',       href: '/students',     icon: Users },
+    { label: 'Inquiries',      href: '/inquiries',    icon: ClipboardList },
     { label: 'Fee Collection', href: '/fees/collect', icon: DollarSign },
-    { label: 'Exams', href: '/exams', icon: BookOpen },
-    { label: 'Due Fees', href: '/fees/due', icon: AlertCircle },
+    { label: 'Exams',          href: '/exams',        icon: BookOpen },
+    { label: 'Due Fees',       href: '/fees/due',     icon: AlertCircle },
   ];
 
   return (
     <>
-      {/* Trigger button */}
+      {/* Trigger — desktop */}
       <button
         onClick={() => setOpen(true)}
-        className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-700/60 bg-slate-800/40 text-slate-500 hover:text-slate-300 hover:border-slate-600 transition-all text-sm group"
+        className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-700/60 bg-slate-800/40 text-slate-500 hover:text-slate-300 hover:border-slate-600 transition-all text-sm"
       >
         <Search size={14} />
         <span className="text-xs">Search...</span>
-        <kbd className="ml-6 text-[10px] text-slate-600 bg-slate-900 border border-slate-700 rounded px-1 py-0.5">{isMac ? '⌘K' : 'Ctrl+K'}</kbd>
+        <kbd className="ml-6 text-[10px] text-slate-600 bg-slate-900 border border-slate-700 rounded px-1 py-0.5">
+          {isMac ? '⌘K' : 'Ctrl+K'}
+        </kbd>
       </button>
 
-      {/* Mobile search icon */}
+      {/* Trigger — mobile */}
       <button
         onClick={() => setOpen(true)}
         className="md:hidden p-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
@@ -75,17 +105,29 @@ const GlobalSearch = () => {
         <Search size={18} />
       </button>
 
-      {/* Command palette overlay */}
+      {/* Command palette */}
       {open && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] px-4">
+        <div
+          className={`fixed inset-0 z-[60] flex items-start justify-center pt-[15vh] px-4${closing ? ' pointer-events-none' : ''}`}
+          onMouseDown={handleOutsideMouseDown}
+        >
+          {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
-            onClick={() => setOpen(false)}
+            className={`absolute inset-0 bg-slate-950/52 backdrop-blur-[3px] ${closing ? 'animate-backdropOut' : 'animate-backdropIn'}`}
           />
-          <div className="relative w-full max-w-lg rounded-2xl border border-slate-700/60 shadow-2xl animate-scaleIn z-10 overflow-hidden p-0" style={{ background: 'rgb(15, 23, 42)' }}>
-            {/* Search input */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-800">
-              <Search size={16} className="text-slate-400 shrink-0" />
+
+          {/* Panel */}
+          <div
+            ref={panelRef}
+            className={`relative w-full max-w-lg rounded-2xl border border-slate-700/40 z-10 overflow-hidden ${closing ? 'animate-scaleOut' : 'animate-scaleIn'}`}
+            style={{
+              background: 'rgb(15, 23, 42)',
+              boxShadow: '0 0 0 1px rgba(79,70,229,0.08), 0 32px 72px -8px rgba(0,0,0,0.8), 0 8px 24px rgba(0,0,0,0.45)'
+            }}
+          >
+            {/* Search row */}
+            <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-800/80">
+              <Search size={16} className="text-brand-light/60 shrink-0" />
               <input
                 ref={inputRef}
                 value={query}
@@ -94,16 +136,26 @@ const GlobalSearch = () => {
                 className="flex-1 bg-transparent text-sm text-slate-200 placeholder-slate-500 outline-none"
               />
               {query && (
-                <button onClick={() => setQuery('')} className="text-slate-500 hover:text-slate-300">
+                <button
+                  onMouseDown={e => e.preventDefault()}
+                  onClick={() => { setQuery(''); inputRef.current?.focus(); }}
+                  className="p-0.5 rounded text-slate-500 hover:text-slate-300 transition-colors"
+                >
                   <X size={14} />
                 </button>
               )}
-              <kbd className="text-[10px] text-slate-600 bg-slate-900/80 border border-slate-700 rounded px-1.5 py-0.5">ESC</kbd>
+              <kbd
+                onMouseDown={e => e.preventDefault()}
+                onClick={close}
+                className="cursor-pointer text-[10px] text-slate-600 bg-slate-900/80 border border-slate-800 rounded px-1.5 py-0.5 hover:text-slate-400 transition-colors select-none"
+              >
+                ESC
+              </kbd>
             </div>
 
             {/* Quick links */}
             <div className="p-2">
-              <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-1">
+              <p className="px-2 pt-1 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-600">
                 Quick Navigation
               </p>
               {quickLinks.map(link => {
@@ -112,14 +164,34 @@ const GlobalSearch = () => {
                   <Link
                     key={link.href}
                     to={link.href}
-                    onClick={() => setOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
+                    onMouseDown={e => e.stopPropagation()}
+                    onClick={close}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-300 hover:bg-slate-800/70 hover:text-white transition-colors group"
                   >
-                    <Icon size={15} className="text-slate-500" />
-                    {link.label}
+                    <div className="w-7 h-7 rounded-lg bg-slate-800/80 border border-slate-700/50 flex items-center justify-center shrink-0 group-hover:bg-brand/15 group-hover:border-brand/30 transition-colors">
+                      <Icon size={13} className="text-slate-500 group-hover:text-brand-light transition-colors" />
+                    </div>
+                    <span>{link.label}</span>
+                    <ArrowRight size={13} className="ml-auto text-slate-700 group-hover:text-slate-400 transition-colors" />
                   </Link>
                 );
               })}
+            </div>
+
+            {/* Footer hints */}
+            <div className="flex items-center gap-4 px-4 py-2.5 border-t border-slate-800/60">
+              <span className="text-[10px] text-slate-700">
+                <kbd className="bg-slate-900 border border-slate-800 rounded px-1 py-0.5 text-slate-600 mr-1 font-mono">↑↓</kbd>
+                navigate
+              </span>
+              <span className="text-[10px] text-slate-700">
+                <kbd className="bg-slate-900 border border-slate-800 rounded px-1 py-0.5 text-slate-600 mr-1 font-mono">↵</kbd>
+                open
+              </span>
+              <span className="text-[10px] text-slate-700 ml-auto">
+                <kbd className="bg-slate-900 border border-slate-800 rounded px-1 py-0.5 text-slate-600 mr-1">esc</kbd>
+                dismiss
+              </span>
             </div>
           </div>
         </div>

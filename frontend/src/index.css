@@ -89,6 +89,18 @@
   animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+@utility animate-scaleOut {
+  animation: scaleOut 0.15s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@utility animate-backdropIn {
+  animation: backdropIn 0.18s ease-out;
+}
+
+@utility animate-backdropOut {
+  animation: backdropOut 0.15s ease-in forwards;
+}
+
 @utility animate-pulse-subtle {
   animation: pulseSub 2s ease-in-out infinite;
 }
@@ -111,6 +123,21 @@
 @keyframes scaleIn {
   from { opacity: 0; transform: scale(0.95); }
   to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes scaleOut {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 0; transform: scale(0.96) translateY(-4px); }
+}
+
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes backdropOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
 }
 
 @keyframes pulseSub {
