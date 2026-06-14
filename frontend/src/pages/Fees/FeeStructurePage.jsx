@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Eye, CheckCircle, AlertCircle, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Plus, Search, Edit2, Eye, CheckCircle, AlertCircle, ToggleLeft, ToggleRight, Trash2 } from 'lucide-react';
 import Table from '../../components/Table';
 import Button from '../../components/Button';
 import PageHeader from '../../components/PageHeader';
@@ -305,28 +305,6 @@ const FeeStructurePage = () => {
         </div>
         <div className="flex items-center gap-3">
           <p className="text-sm font-bold text-brand-light">{fmt(inst.amount)}</p>
-          <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              type="button"
-              onClick={() => {
-                setEditingInst({ id: inst.id, label: inst.label, amount: String(inst.amount), dueDate: inst.dueDate?.split('T')[0] || '' });
-                setInstFormOpen(false);
-                setInstErrors({});
-              }}
-              className="p-1 rounded bg-brand/10 hover:bg-brand text-brand-light hover:text-white transition-colors"
-              title="Edit"
-            >
-              <Edit2 size={12} />
-            </button>
-            <button
-              type="button"
-              onClick={() => openConfirmDeleteInst(inst)}
-              className="p-1 rounded bg-status-danger/10 hover:bg-status-danger text-status-danger hover:text-white transition-colors"
-              title="Delete"
-            >
-              <Trash2 size={12} />
-            </button>
-          </div>
         </div>
       </div>
     );
@@ -420,62 +398,7 @@ const FeeStructurePage = () => {
               <div className="border-t border-slate-800 pt-3 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-slate-300">Installment Schedule</p>
-                  <button
-                    type="button"
-                    onClick={() => { setInstFormOpen((o) => !o); setEditingInst(null); setInstErrors({}); }}
-                    className="flex items-center gap-1.5 text-xs text-brand-light hover:text-white transition-colors"
-                  >
-                    <Plus size={13} /> Add Installment
-                  </button>
                 </div>
-
-                {/* Add installment inline form */}
-                {instFormOpen && (
-                  <form onSubmit={handleAddInstallment} className="p-3 rounded-xl bg-bg-deep/40 border border-brand/30 flex flex-col gap-2">
-                    {instErrors.submit && <p className="text-[10px] text-status-danger">{instErrors.submit}</p>}
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] text-slate-400">Label</label>
-                        <input
-                          type="text"
-                          placeholder="Term 1"
-                          value={newInst.label}
-                          onChange={(e) => setNewInst((i) => ({ ...i, label: e.target.value }))}
-                          className="w-full px-2 py-1.5 rounded-lg text-xs outline-none glass-input"
-                        />
-                        {instErrors.label && <p className="text-[10px] text-status-danger">{instErrors.label}</p>}
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] text-slate-400">Amount (₹)</label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={newInst.amount}
-                          onChange={(e) => setNewInst((i) => ({ ...i, amount: e.target.value }))}
-                          className="w-full px-2 py-1.5 rounded-lg text-xs outline-none glass-input"
-                        />
-                        {instErrors.amount && <p className="text-[10px] text-status-danger">{instErrors.amount}</p>}
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] text-slate-400">Due Date</label>
-                        <input
-                          type="date"
-                          value={newInst.dueDate}
-                          onChange={(e) => setNewInst((i) => ({ ...i, dueDate: e.target.value }))}
-                          className="w-full px-2 py-1.5 rounded-lg text-xs outline-none glass-input"
-                        />
-                        {instErrors.dueDate && <p className="text-[10px] text-status-danger">{instErrors.dueDate}</p>}
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <button type="button" onClick={() => { setInstFormOpen(false); setInstErrors({}); }} className="text-xs text-slate-400 hover:text-white transition-colors px-2 py-1">Cancel</button>
-                      <button type="submit" disabled={instLoading} className="text-xs px-3 py-1 rounded-lg bg-brand text-white font-semibold hover:bg-brand/80 transition-colors disabled:opacity-60">
-                        {instLoading ? 'Adding…' : 'Add'}
-                      </button>
-                    </div>
-                  </form>
-                )}
 
                 {detailStructure.installments.length === 0 ? (
                   <p className="text-sm text-slate-500">No installments defined.</p>
