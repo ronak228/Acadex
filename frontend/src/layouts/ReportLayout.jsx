@@ -4,8 +4,8 @@ import { DollarSign, BookOpen, Users, ClipboardList, Activity, PieChart, Trendin
 
 const navItems = [
   { path: '/reports/revenue', label: 'Revenue', icon: DollarSign },
-  { path: '/reports/due-fee', label: 'Due Fees', icon: TrendingUp },
-  { path: '/reports/conversions', label: 'Conversions', icon: Users },
+  { path: '/reports/due-fees', label: 'Due Fees', icon: TrendingUp },
+  { path: '/reports/conversion', label: 'Conversions', icon: Users },
   { path: '/reports/academic', label: 'Academic', icon: BookOpen },
   { path: '/reports/attendance', label: 'Attendance', icon: ClipboardList },
   { path: '/reports/performance', label: 'Performance', icon: Activity },
